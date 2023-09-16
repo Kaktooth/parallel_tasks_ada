@@ -1,0 +1,9 @@
+name = "parallel_task"
+description = "Shiny new project"
+version = "0.1.0-dev"
+
+authors = ["Volodimir Bezridnyi"]
+maintainers = ["Volodimir Bezridnyi <bezridniyv0@gmail.com>"]
+maintainers-logins = ["Kaktooth"]
+
+executables = ["parallel_task"]

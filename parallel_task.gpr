@@ -1,0 +1,32 @@
+with "config/parallel_task_config.gpr";
+
+project Parallel_Task is
+
+   for Source_Dirs use ("src", "config");
+   for Object_Dir use "obj/" & Parallel_Task_Config.Build_Profile;
+   for Create_Missing_Dirs use "True";
+   for Exec_Dir use "bin";
+   for Main use ("parallel_sum.adb", "parallel_task.adb", "increment.adb", "parallel_task.adb");
+
+   package Compiler is
+      for Default_Switches ("ada") use ("-Og", "-ffunction-sections", "-fdata-sections", "-g", "-gnat2022", "-gnatVa", "-gnatwa.X", "-gnatyaABbc-defhiIklM79nOprStux");
+   end Compiler;
+
+   package Binder is
+      for Switches ("ada") use ("-Es"); --  Symbolic traceback
+   end Binder;
+
+   package Install is
+      for Artifacts (".") use ("share");
+   end Install;
+
+   package Stack is
+   end Stack;
+
+   package Ide is
+      for Vcs_Kind use "git";
+      for Vcs_Repository_Root use ".";
+   end Ide;
+
+end Parallel_Task;
+
