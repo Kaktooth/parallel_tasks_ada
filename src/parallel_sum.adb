@@ -1,13 +1,16 @@
 with Ada.Containers;
 with Ada.Containers.Vectors;
+with Ada.Real_Time; use Ada.Real_Time;
 
 with Ada.Text_IO; use Ada.Text_IO;
 
 procedure parallel_sum is
+
    package Integer_Vectors is new Ada.Containers.Vectors (Index_Type => Natural, Element_Type => Integer);
    use Integer_Vectors;
 
-  protected type Protected_Integer_Vector is
+   protected type Protected_Integer_Vector is
+
       procedure Append(Element : Integer);
       procedure PutLine;
       procedure Set(newVec : Integer_Vectors.Vector);
@@ -22,9 +25,12 @@ procedure parallel_sum is
 
    private
       vec : Integer_Vectors.Vector;
+
    end Protected_Integer_Vector;
 
+
    protected body Protected_Integer_Vector is
+
       procedure Append(Element : Integer) is
       begin
          vec.Append(Element);
@@ -44,12 +50,16 @@ procedure parallel_sum is
 
       procedure Delete_First is
       begin
-         vec.Delete_First;
+         if Natural(vec.Length) > 1 then
+            vec.Delete_First;
+         end if;
       end Delete_First;
 
       procedure Delete_Last is
       begin
-         vec.Delete_Last;
+           if Natural(vec.Length) > 1 then
+            vec.Delete_Last;
+            end if;
        end Delete_Last;
 
       procedure Set(newVec : Integer_Vectors.Vector) is
@@ -86,52 +96,74 @@ procedure parallel_sum is
    vector : Protected_Integer_Vector;
    resultVector : Protected_Integer_Vector;
    nextLength : Integer;
-   lastIndex : Integer;
    sum : Integer;
-   haveNoPair : Integer;
+   Elapsed_Time : Time_Span;
+   Start_Time, End_Time : Time;
+   Elapsed_Time_Ms : Duration;
+   ms    : Duration := 1000.0;
 
-   task T is
-      entry NewTask;
-   end T;
+   task type Parallel_Task is
+      entry Start;
+   end Parallel_Task;
 
-   task body T is
+   task body Parallel_Task is
    begin
-      accept NewTask  do
-         for J in 1 .. 5 loop
 
-         exit when vector.Length = 1;
-         nextLength := (Integer(vector.Length) + 1) / 2;
+      accept Start do
 
-         vector.PutLine;
+      nextLength := (Integer(vector.Length) + 1) / 2;
 
-         for I in 1 .. nextLength loop
-               haveNoPair := Integer(vector.Length) mod 2;
-
-            if vector.Length = 1 then
-                  resultVector.Append( vector.First_Element);
-            else
-               sum := vector.First_Element + vector.Last_Element;
-               resultVector.Append(sum);
-               vector.Delete_First;
-               vector.Delete_Last;
+      for I in 1 .. nextLength loop
+          if vector.Length = 1 then
+            resultVector.Append(vector.First_Element);
+            vector.Delete_First;
+          else
+             sum := vector.First_Element + vector.Last_Element;
+             resultVector.Append(sum);
+             vector.Delete_First;
+             vector.Delete_Last;
             end if;
-         end loop;
+       end loop;
+       vector.Set(resultVector.Get_Elements);
+       resultVector.Clear;
+       Put ("vec length: " & Integer'Image (vector.Length));
+       Put_Line (Integer_Vectors.Vector'Image (vector.Get_Elements));
+            end Start;
 
-         Put(" --> ");
-         resultVector.PutLine;
-         Put("|| then ||");
 
-         vector.Set(resultVector.Get_Elements);
-            resultVector.Clear;
-            end loop;
-       end NewTask;
-   end T;
+   end Parallel_Task;
+
+   task1 : Parallel_Task;
+   task2 : Parallel_Task;
+   task3 : Parallel_Task;
+   task4 : Parallel_Task;
+   task5 : Parallel_Task;
+   task6 : Parallel_Task;
+
 begin
-   for I in 1 .. 29 loop
-         vector.Append (I);
+
+   for I in 1 .. 30 loop
+        vector.Append (I);
    end loop;
+   Put ("vec length: " & Integer'Image (vector.Length));
+   Put_Line (Integer_Vectors.Vector'Image (vector.Get_Elements));
 
-   T.NewTask;
+   Start_Time := Ada.Real_Time.Clock;
 
-   Put_Line ("Complete");
+   task1.Start;
+   task2.Start;
+   task3.Start;
+   task4.Start;
+   task5.Start;
+   task6.Start;
+
+   End_Time := Ada.Real_Time.Clock;
+
+   Elapsed_Time := End_Time - Start_Time;
+   Elapsed_Time_Ms := To_Duration(Elapsed_Time) * ms;
+
+   Put_Line("Your result: " & Integer_Vectors.Vector'Image (vector.Get_Elements));
+   Put ("Elapsed Time (ms): ");
+   Put(Duration'Image(Elapsed_Time_Ms));
+   null;
 end parallel_sum;
